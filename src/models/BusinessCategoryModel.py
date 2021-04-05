@@ -1,23 +1,19 @@
-# src/models/OrganizationModel.py
+# src/models/BusinessCategoryModel.py
 from . import db
 import datetime
 from marshmallow import fields, Schema
 
-class OrganizationModel(db.Model):
+class BusinessCategoryModel(db.Model):
 
-    __tablename__ = 'organization'
-
+    __tablename__ = 'business_category'
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128), nullable=False)
-    address = db.Column(db.Text, nullable=False)
+
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.code = data.get('code')
         self.name = data.get('name')
-        self.address = data.get('address')
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -37,19 +33,17 @@ class OrganizationModel(db.Model):
   
     @staticmethod
     def get_all():
-        return OrganizationModel.query.all()
+        return BusinessCategoryModel.query.all()
   
     @staticmethod
     def get_one(id):
-        return OrganizationModel.query.get(id)
+        return BusinessCategoryModel.query.get(id)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class OrganizationSchema(Schema):
+class BusinessCategorySchema(Schema):
     id = fields.Int(dump_only=True)
-    code = fields.Str(required=True)
     name = fields.Str(required=True)
-    address = fields.Str(required=False)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

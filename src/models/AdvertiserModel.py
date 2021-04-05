@@ -1,17 +1,15 @@
-# src/models/ProfileModel.py
-from . import db
+# src/models/AdvertiserModel.py
+from . import db, 
 import datetime
 from marshmallow import fields, Schema
-from .AdvertiserModel import AdvertiserSchema
+from .BusinessCategoryModel import BusinessCategorySchema
 
-class ProfileModel(db.Model):
+class AdvertiserModel(db.Model):
 
-    __tablename__ = 'profile'
+    __tablename__ = 'advertiser'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship("UserModel", back_populates="user")
-
+    profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
     email = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128), nullable=False)
     phone = db.Column(db.Numeric(14, 0))
@@ -23,15 +21,20 @@ class ProfileModel(db.Model):
     city = db.Column(db.String(50))
     postcode = db.Column(db.String(10))
 
-    advertiser = db.relationship('AdvertiserModel',
-        secondary=association_profile_advertiser, lazy='subquery',
-        backref=db.backref('profile', lazy=True))
+    contact_name = db.Column(db.String(250))
+    contact_email = db.Column(db.String(250))
+    contact_phone = db.Column(db.String(250))
 
+    business_category = db.relationship('BusinessCategoryModel',
+        secondary=assocication_advertiser_business, lazy='subquery',
+        backref=db.backref('advertiser', lazy=True))
+        
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.user_id = data.get('user_id')
+        self.code = data.get('code')
+        self.name = data.get('name')
         self.email = data.get('email')
         self.name = data.get('name')
         self.phone = data.get('phone')
@@ -42,6 +45,11 @@ class ProfileModel(db.Model):
         self.state = data.get('state')
         self.city = data.get('city')
         self.postcode = data.get('postcode')
+        
+        self.contact_name = data.get('contact_name')
+        self.contact_email = data.get('contact_email')
+        self.contact_phone = data.get('contact_phone')
+        
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -61,21 +69,20 @@ class ProfileModel(db.Model):
   
     @staticmethod
     def get_all():
-        return ProfileModel.query.all()
+        return AdvertiserModel.query.all()
   
     @staticmethod
     def get_one(id):
-        return ProfileModel.query.get(id)
+        return AdvertiserModel.query.get(id)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class ProfileSchema(Schema):
+class AdvertiserSchema(Schema):
     id = fields.Int(dump_only=True)
-    user_id = fields.Int(required=True)
-    email = fields.Str(required=True)
+    email = fields.Str(required=False)
     name = fields.Str(required=True)
-    phone = fields.Numeric(required=True)
+    phone = fields.Str(required=False)
     address1 = fields.Str(required=False)
     address2 = fields.Str(required=False)
     address3 = fields.Str(required=False)
@@ -84,7 +91,11 @@ class ProfileSchema(Schema):
     city = fields.Str(required=False)
     postcode = fields.Str(required=False)
 
-    advertiser = fields.Nested(AdvertiserSchema, many=True)
+    contact_name = fields.Str(required=False)
+    contact_email = fields.Str(required=False)
+    contact_phone = fields.Str(required=False)
+
+    business_category = fields.Nested(BusinessCategorySchema, many=True)
     
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

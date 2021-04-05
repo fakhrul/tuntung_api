@@ -1,27 +1,26 @@
-# src/models/ActivityModel.py
+# src/models/AudienceModel.py
 from . import db
 import datetime
 from marshmallow import fields, Schema
 
-class ActivityModel(db.Model):
+class AudienceModel(db.Model):
 
-    __tablename__ = 'activity'
+    __tablename__ = 'audience'
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
-    # title = db.Column(db.String(128), nullable=False)
-    # contents = db.Column(db.Text, nullable=False)
-    # owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(50), nullable=False)
+    location = db.Column(db.String(250), nullable=False)
+    latitude = db.Column(db.String(50), nullable=True)
+    longitude = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.code = data.get('code')
         self.name = data.get('name')
-        # self.owner_id = data.get('owner_id')
-        # self.title = data.get('title')
-        # self.contents = data.get('contents')
+        self.location = data.get('location')
+        self.latitude = data.get('latitude')
+        self.longitude = data.get('longitude')
+
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -41,21 +40,20 @@ class ActivityModel(db.Model):
   
     @staticmethod
     def get_all():
-        return ActivityModel.query.all()
+        return AudienceModel.query.all()
   
     @staticmethod
     def get_one(id):
-        return ActivityModel.query.get(id)
+        return AudienceModel.query.get(id)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class ActivitySchema(Schema):
+class AudienceSchema(Schema):
     id = fields.Int(dump_only=True)
-    code = fields.Str(required=True)
     name = fields.Str(required=True)
-    # title = fields.Str(required=True)
-    # contents = fields.Str(required=True)
-    # owner_id = fields.Int(required=True)
+    location = fields.Str(required=True)
+    latitude = fields.Str(required=False)
+    longitude = fields.Str(required=False)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

@@ -14,7 +14,7 @@ class UserModel(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(128), nullable=False)
+    # name = db.Column(db.String(128), nullable=False)
     # apaterno = db.Column(db.String(128), nullable=False)
     # amaterno = db.Column(db.String(128))
     # rfc = db.Column(db.String(128))
@@ -43,7 +43,7 @@ class UserModel(db.Model):
         """
         Class constructor
         """
-        self.name = data.get('name')
+        # self.name = data.get('name')
         # self.apaterno = data.get('apaterno')
         # self.amaterno = data.get('amaterno')
         # self.rfc = data.get('rfc')
@@ -108,7 +108,7 @@ class UserSchema(Schema):
     User Schema
     """
     id = fields.Int(dump_only=True)
-    name = fields.Str(required=True)
+    # name = fields.Str(required=True)
     # apaterno = fields.Str(required=True)
     # amaterno = fields.Str()
     # rfc = fields.Str()
