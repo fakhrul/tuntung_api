@@ -1,21 +1,19 @@
-# src/models/RoleModel.py
+# src/models/WalkerModel.py
 from . import db
 import datetime
 from marshmallow import fields, Schema
 
-class RoleModel(db.Model):
+class WalkerModel(db.Model):
 
-    __tablename__ = 'role'
+    __tablename__ = 'walker'
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'), nullable=False)
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.code = data.get('code')
-        self.name = data.get('name')
+        self.profile_id = data.get('profile_id')
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -35,18 +33,17 @@ class RoleModel(db.Model):
   
     @staticmethod
     def get_all():
-        return RoleModel.query.all()
+        return WalkerModel.query.all()
   
     @staticmethod
     def get_one(id):
-        return RoleModel.query.get(id)
+        return WalkerModel.query.get(id)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class RoleSchema(Schema):
+class WalkerSchema(Schema):
     id = fields.Int(dump_only=True)
-    code = fields.Str(required=True)
-    name = fields.Str(required=True)
+    profile_id = fields.Int(required=True)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)
