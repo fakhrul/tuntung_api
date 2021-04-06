@@ -1,95 +1,91 @@
-#/src/views/ProductView.py
+# /src/views/AudienceView.py
 from flask import Flask, request, g, Blueprint, json, Response
 from marshmallow import ValidationError
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
-from ..models.ProductModel import ProductModel, ProductSchema
+from ..models.AudienceModel import AudienceModel, AudienceSchema
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
-product_api = Blueprint('product_api', __name__)
-product_schema = ProductSchema()
+audience_api = Blueprint('audience_api', __name__)
+audience_schema = AudienceSchema()
 
-
-@product_api.route('/', methods=['GET'])
+@audience_api.route('/', methods=['GET'])
 def get_all():
-    """
-    Get All Products
-    """
-    posts = ProductModel.get_all()
-    data = product_schema.dump(posts, many=True)
-    return custom_response(data, 200)
+    posts = AudienceModel.get_all()
+    data = audience_schema.dump(posts, many=True)
 
-@product_api.route('/<int:product_id>', methods=['GET'])
-def get_one(product_id):
-    """
-    Get A Product
-    """
-    post = ProductModel.get_one(product_id)
+    retObj = {
+        'data' : data,
+    }
+
+    response = custom_response(retObj, 200)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    print('cors-debug')
+    return response
+
+
+@audience_api.route('/<int:audience_id>', methods=['GET'])
+def get_one(audience_id):
+    post = AudienceModel.get_one(audience_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = product_schema.dump(post)
+    data = audience_schema.dump(post)
     return custom_response(data, 200)
-    
-@product_api.route('/', methods=['POST'])
+
+
+@audience_api.route('/', methods=['POST'])
 @Auth.auth_required
 def create():
-    """
-    Create Product Function
-    """
     req_data = request.get_json()
     app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
     user = UserModel.get_one_user(g.user.get('id'))
     req_data['owner_id'] = user.id
 
     try:
-        data = product_schema.load(req_data)
+        data = audience_schema.load(req_data)
     except ValidationError as err:
         return custom_response(err, 400)
-        
-    post = ProductModel(data)
+
+    post = AudienceModel(data)
     post.save()
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
     except Exception as e:
         app.logger.error(e)
-    data = product_schema.dump(post)
-    return custom_response(data, 201)    
+    data = audience_schema.dump(post)
+    return custom_response(data, 201)
 
-@product_api.route('/<int:product_id>', methods=['PUT'])
-@Auth.auth_required
-def update(product_id):
-    """
-    Update A Product
-    """
+
+@audience_api.route('/<int:audience_id>', methods=['PUT'])
+# @Auth.auth_required
+def update(audience_id):
     req_data = request.get_json()
-    post = ProductModel.get_one(product_id)
+    post = AudienceModel.get_one(audience_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = product_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
+    data = audience_schema.dump(post)
+    # if data.get('owner_id') != g.user.get('id'):
+    #     return custom_response({'error': 'permission denied'}, 400)
 
     try:
-        data = product_schema.load(req_data, partial=True)
+        data = audience_schema.load(req_data, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
 
     post.update(data)
-    data = product_schema.dump(post)
+    data = audience_schema.dump(post)
     return custom_response(data, 200)
 
-@product_api.route('/<int:product_id>', methods=['DELETE'])
+
+@audience_api.route('/<int:audience_id>', methods=['DELETE'])
 @Auth.auth_required
-def delete(product_id):
-    """
-    Delete A Product
-    """
-    post = ProductModel.get_one(product_id)
+def delete(audience_id):
+    post = AudienceModel.get_one(audience_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = product_schema.dump(post)
+    data = audience_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 
@@ -98,9 +94,6 @@ def delete(product_id):
 
 
 def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
     return Response(
         mimetype="application/json",
         response=json.dumps(res),

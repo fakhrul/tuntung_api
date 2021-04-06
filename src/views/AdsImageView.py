@@ -1,95 +1,80 @@
-#/src/views/SpeciesView.py
+#/src/views/AdsImageView.py
 from flask import Flask, request, g, Blueprint, json, Response
 from marshmallow import ValidationError
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
-from ..models.SpeciesModel import SpeciesModel, SpeciesSchema
+from ..models.AdsImageModel import AdsImageModel, AdsImageSchema
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
-species_api = Blueprint('species_api', __name__)
-species_schema = SpeciesSchema()
+ads_image_api = Blueprint('ads_image_api', __name__)
+ads_image_schema = AdsImageSchema()
 
 
-@species_api.route('/', methods=['GET'])
+@ads_image_api.route('/', methods=['GET'])
 def get_all():
-    """
-    Get All Speciess
-    """
-    posts = SpeciesModel.get_all()
-    data = species_schema.dump(posts, many=True)
+    posts = AdsImageModel.get_all()
+    data = ads_image_schema.dump(posts, many=True)
     return custom_response(data, 200)
 
-@species_api.route('/<int:species_id>', methods=['GET'])
-def get_one(species_id):
-    """
-    Get A Species
-    """
-    post = SpeciesModel.get_one(species_id)
+@ads_image_api.route('/<int:ads_image_id>', methods=['GET'])
+def get_one(ads_image_id):
+    post = AdsImageModel.get_one(ads_image_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = species_schema.dump(post)
+    data = ads_image_schema.dump(post)
     return custom_response(data, 200)
     
-@species_api.route('/', methods=['POST'])
+@ads_image_api.route('/', methods=['POST'])
 @Auth.auth_required
 def create():
-    """
-    Create Species Function
-    """
     req_data = request.get_json()
     app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
     user = UserModel.get_one_user(g.user.get('id'))
     req_data['owner_id'] = user.id
 
     try:
-        data = species_schema.load(req_data)
+        data = ads_image_schema.load(req_data)
     except ValidationError as err:
         return custom_response(err, 400)
         
-    post = SpeciesModel(data)
+    post = AdsImageModel(data)
     post.save()
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
     except Exception as e:
         app.logger.error(e)
-    data = species_schema.dump(post)
+    data = ads_image_schema.dump(post)
     return custom_response(data, 201)    
 
-@species_api.route('/<int:species_id>', methods=['PUT'])
+@ads_image_api.route('/<int:ads_image_id>', methods=['PUT'])
 @Auth.auth_required
-def update(species_id):
-    """
-    Update A Species
-    """
+def update(ads_image_id):
     req_data = request.get_json()
-    post = SpeciesModel.get_one(species_id)
+    post = AdsImageModel.get_one(ads_image_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = species_schema.dump(post)
+    data = ads_image_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 
     try:
-        data = species_schema.load(req_data, partial=True)
+        data = ads_image_schema.load(req_data, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
 
     post.update(data)
-    data = species_schema.dump(post)
+    data = ads_image_schema.dump(post)
     return custom_response(data, 200)
 
-@species_api.route('/<int:species_id>', methods=['DELETE'])
+@ads_image_api.route('/<int:ads_image_id>', methods=['DELETE'])
 @Auth.auth_required
-def delete(species_id):
-    """
-    Delete A Species
-    """
-    post = SpeciesModel.get_one(species_id)
+def delete(ads_image_id):
+    post = AdsImageModel.get_one(ads_image_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = species_schema.dump(post)
+    data = ads_image_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 

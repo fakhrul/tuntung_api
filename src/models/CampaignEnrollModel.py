@@ -10,7 +10,7 @@ class CampaignEnrollModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     walker_id = db.Column(db.Integer, db.ForeignKey('walker.id'), nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
-    total_minutes = db.Column(db.Int)
+    total_minutes = db.Column(db.Integer)
     wages = db.Column(db.Float)
     status = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime)
@@ -51,11 +51,6 @@ class CampaignEnrollModel(db.Model):
         return '<id {}>'.format(self.id)
 
 class CampaignEnrollSchema(Schema):
-    walker_id = db.Column(db.Integer, db.ForeignKey('walker.id'), nullable=False)
-    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
-    total_minutes = db.Column(db.Int)
-    wages = db.Column(db.Float)
-    status = db.Column(db.String(50), nullable=False)
 
     id = fields.Int(dump_only=True)
     walker_id = fields.Str(required=True)

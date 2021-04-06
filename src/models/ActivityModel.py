@@ -1,25 +1,27 @@
-# src/models/LedModel.py
+# src/models/ActivityModel.py
 from . import db
 import datetime
 from marshmallow import fields, Schema
 
-class LedModel(db.Model):
+class ActivityModel(db.Model):
 
-    __tablename__ = 'led'
+    __tablename__ = 'activity'
 
     id = db.Column(db.Integer, primary_key=True)
-    led_type = db.Column(db.String(50), nullable=False)
     walker_id = db.Column(db.Integer, db.ForeignKey('walker.id'), nullable=False)
-    serial_number = db.Column(db.String(50), nullable=False)
-    manufacturer = db.Column(db.String(50), nullable=False)
+    activity_type = db.Column(db.String(50), nullable=False)
+    info = db.Column(db.String(250), nullable=False)
+    latitude = db.Column(db.String(50), nullable=False)
+    longitude = db.Column(db.String(50), nullable=False)
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.led_type = data.get('led_type')
         self.walker_id = data.get('walker_id')
-        self.serial_number = data.get('serial_number')
-        self.manufacturer = data.get('manufacturer')
+        self.activity_type = data.get('activity_type')
+        self.info = data.get('info')
+        self.latitude = data.get('latitude')
+        self.longitude = data.get('longitude')
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -39,20 +41,23 @@ class LedModel(db.Model):
   
     @staticmethod
     def get_all():
-        return LedModel.query.all()
+        return ActivityModel.query.all()
   
     @staticmethod
     def get_one(id):
-        return LedModel.query.get(id)
+        return ActivityModel.query.get(id)
 
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
-class LedSchema(Schema):
+class ActivitySchema(Schema):
+
     id = fields.Int(dump_only=True)
-    led_type = fields.Str(required=True)
     walker_id = fields.Int(required=True)
-    serial_number = fields.Str(required=False)
-    manufacturer = fields.Str(required=False)
+    activity_type = fields.Str(required=True)
+    info = fields.Str(required=True)
+    latitude = fields.Str(required=False)
+    longitude = fields.Str(required=False)
+
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

@@ -1,5 +1,5 @@
 # src/models/ProfileModel.py
-from . import db
+from . import db, association_profile_advertiser
 import datetime
 from marshmallow import fields, Schema
 from .AdvertiserModel import AdvertiserSchema
@@ -14,7 +14,7 @@ class ProfileModel(db.Model):
 
     email = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128), nullable=False)
-    phone = db.Column(db.Numeric(14, 0))
+    phone = db.Column(db.String(50))
     address1 = db.Column(db.String(250))
     address2 = db.Column(db.String(250))
     address3 = db.Column(db.String(250))
@@ -75,7 +75,7 @@ class ProfileSchema(Schema):
     user_id = fields.Int(required=True)
     email = fields.Str(required=True)
     name = fields.Str(required=True)
-    phone = fields.Numeric(required=True)
+    phone = fields.Str(required=True)
     address1 = fields.Str(required=False)
     address2 = fields.Str(required=False)
     address3 = fields.Str(required=False)

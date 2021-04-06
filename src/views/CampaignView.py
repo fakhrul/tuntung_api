@@ -1,95 +1,91 @@
-#/src/views/RoleView.py
+# /src/views/CampaignView.py
 from flask import Flask, request, g, Blueprint, json, Response
 from marshmallow import ValidationError
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
-from ..models.RoleModel import RoleModel, RoleSchema
+from ..models.CampaignModel import CampaignModel, CampaignSchema
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
-role_api = Blueprint('role_api', __name__)
-role_schema = RoleSchema()
+campaign_api = Blueprint('campaign_api', __name__)
+campaign_schema = CampaignSchema()
 
-
-@role_api.route('/', methods=['GET'])
+@campaign_api.route('/', methods=['GET'])
 def get_all():
-    """
-    Get All Roles
-    """
-    posts = RoleModel.get_all()
-    data = role_schema.dump(posts, many=True)
-    return custom_response(data, 200)
+    posts = CampaignModel.get_all()
+    data = campaign_schema.dump(posts, many=True)
 
-@role_api.route('/<int:role_id>', methods=['GET'])
-def get_one(role_id):
-    """
-    Get A Role
-    """
-    post = RoleModel.get_one(role_id)
+    retObj = {
+        'data' : data,
+    }
+
+    response = custom_response(retObj, 200)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    print('cors-debug')
+    return response
+
+
+@campaign_api.route('/<int:campaign_id>', methods=['GET'])
+def get_one(campaign_id):
+    post = CampaignModel.get_one(campaign_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = role_schema.dump(post)
+    data = campaign_schema.dump(post)
     return custom_response(data, 200)
-    
-@role_api.route('/', methods=['POST'])
+
+
+@campaign_api.route('/', methods=['POST'])
 @Auth.auth_required
 def create():
-    """
-    Create Role Function
-    """
     req_data = request.get_json()
     app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
     user = UserModel.get_one_user(g.user.get('id'))
     req_data['owner_id'] = user.id
 
     try:
-        data = role_schema.load(req_data)
+        data = campaign_schema.load(req_data)
     except ValidationError as err:
         return custom_response(err, 400)
-        
-    post = RoleModel(data)
+
+    post = CampaignModel(data)
     post.save()
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
     except Exception as e:
         app.logger.error(e)
-    data = role_schema.dump(post)
-    return custom_response(data, 201)    
+    data = campaign_schema.dump(post)
+    return custom_response(data, 201)
 
-@role_api.route('/<int:role_id>', methods=['PUT'])
-@Auth.auth_required
-def update(role_id):
-    """
-    Update A Role
-    """
+
+@campaign_api.route('/<int:campaign_id>', methods=['PUT'])
+# @Auth.auth_required
+def update(campaign_id):
     req_data = request.get_json()
-    post = RoleModel.get_one(role_id)
+    post = CampaignModel.get_one(campaign_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = role_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
+    data = campaign_schema.dump(post)
+    # if data.get('owner_id') != g.user.get('id'):
+    #     return custom_response({'error': 'permission denied'}, 400)
 
     try:
-        data = role_schema.load(req_data, partial=True)
+        data = campaign_schema.load(req_data, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
 
     post.update(data)
-    data = role_schema.dump(post)
+    data = campaign_schema.dump(post)
     return custom_response(data, 200)
 
-@role_api.route('/<int:role_id>', methods=['DELETE'])
+
+@campaign_api.route('/<int:campaign_id>', methods=['DELETE'])
 @Auth.auth_required
-def delete(role_id):
-    """
-    Delete A Role
-    """
-    post = RoleModel.get_one(role_id)
+def delete(campaign_id):
+    post = CampaignModel.get_one(campaign_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = role_schema.dump(post)
+    data = campaign_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 
@@ -98,9 +94,6 @@ def delete(role_id):
 
 
 def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
     return Response(
         mimetype="application/json",
         response=json.dumps(res),

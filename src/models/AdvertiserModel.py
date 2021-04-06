@@ -1,5 +1,5 @@
 # src/models/AdvertiserModel.py
-from . import db, 
+from . import db, assocication_advertiser_business
 import datetime
 from marshmallow import fields, Schema
 from .BusinessCategoryModel import BusinessCategorySchema

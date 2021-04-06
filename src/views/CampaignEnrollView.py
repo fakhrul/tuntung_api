@@ -1,22 +1,19 @@
-# /src/views/OrganizationView.py
+# /src/views/CampaignEnrollView.py
 from flask import Flask, request, g, Blueprint, json, Response
 from marshmallow import ValidationError
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
-from ..models.OrganizationModel import OrganizationModel, OrganizationSchema
+from ..models.CampaignEnrollModel import CampaignEnrollModel, CampaignEnrollSchema
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
-organization_api = Blueprint('organization_api', __name__)
-organization_schema = OrganizationSchema()
+campaign_enroll_api = Blueprint('campaign_enroll_api', __name__)
+campaign_enroll_schema = CampaignEnrollSchema()
 
-@organization_api.route('/', methods=['GET'])
+@campaign_enroll_api.route('/', methods=['GET'])
 def get_all():
-    """
-    Get All Organizations
-    """
-    posts = OrganizationModel.get_all()
-    data = organization_schema.dump(posts, many=True)
+    posts = CampaignEnrollModel.get_all()
+    data = campaign_enroll_schema.dump(posts, many=True)
 
     retObj = {
         'data' : data,
@@ -28,79 +25,67 @@ def get_all():
     return response
 
 
-@organization_api.route('/<int:organization_id>', methods=['GET'])
-def get_one(organization_id):
-    """
-    Get A Organization
-    """
-    post = OrganizationModel.get_one(organization_id)
+@campaign_enroll_api.route('/<int:campaign_enroll_id>', methods=['GET'])
+def get_one(campaign_enroll_id):
+    post = CampaignEnrollModel.get_one(campaign_enroll_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = organization_schema.dump(post)
+    data = campaign_enroll_schema.dump(post)
     return custom_response(data, 200)
 
 
-@organization_api.route('/', methods=['POST'])
+@campaign_enroll_api.route('/', methods=['POST'])
 @Auth.auth_required
 def create():
-    """
-    Create Organization Function
-    """
     req_data = request.get_json()
     app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
     user = UserModel.get_one_user(g.user.get('id'))
     req_data['owner_id'] = user.id
 
     try:
-        data = organization_schema.load(req_data)
+        data = campaign_enroll_schema.load(req_data)
     except ValidationError as err:
         return custom_response(err, 400)
 
-    post = OrganizationModel(data)
+    post = CampaignEnrollModel(data)
     post.save()
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
     except Exception as e:
         app.logger.error(e)
-    data = organization_schema.dump(post)
+    data = campaign_enroll_schema.dump(post)
     return custom_response(data, 201)
 
 
-@organization_api.route('/<int:organization_id>', methods=['PUT'])
+@campaign_enroll_api.route('/<int:campaign_enroll_id>', methods=['PUT'])
 # @Auth.auth_required
-def update(organization_id):
-    """
-    Update A Organization
-    """
+def update(campaign_enroll_id):
     req_data = request.get_json()
-    post = OrganizationModel.get_one(organization_id)
+    post = CampaignEnrollModel.get_one(campaign_enroll_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = organization_schema.dump(post)
+    data = campaign_enroll_schema.dump(post)
     # if data.get('owner_id') != g.user.get('id'):
     #     return custom_response({'error': 'permission denied'}, 400)
 
     try:
-        data = organization_schema.load(req_data, partial=True)
+        data = campaign_enroll_schema.load(req_data, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
 
     post.update(data)
-    data = organization_schema.dump(post)
+    data = campaign_enroll_schema.dump(post)
     return custom_response(data, 200)
 
 
-@organization_api.route('/<int:organization_id>', methods=['DELETE'])
+@campaign_enroll_api.route('/<int:campaign_enroll_id>', methods=['DELETE'])
 @Auth.auth_required
-def delete(organization_id):
-    """
-    Delete A Organization
-    """
-    post = OrganizationModel.get_one(organization_id)
+def delete(campaign_enroll_id):
+    post = CampaignEnrollModel.get_one(campaign_enroll_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = organization_schema.dump(post)
+    data = campaign_enroll_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 
@@ -109,9 +94,6 @@ def delete(organization_id):
 
 
 def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
     return Response(
         mimetype="application/json",
         response=json.dumps(res),

@@ -53,7 +53,7 @@ class AdsImageSchema(Schema):
     campaign_id = fields.Int(required=False)
     name = fields.Str(required=True)
     img_filename = fields.Str(required=True)
-    img_data = fields.LargeBinary(required=True)
+    # img_data = fields.LargeBinary(required=True)
     
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

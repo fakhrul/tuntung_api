@@ -1,95 +1,91 @@
-#/src/views/LocationView.py
+# /src/views/LedView.py
 from flask import Flask, request, g, Blueprint, json, Response
 from marshmallow import ValidationError
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
-from ..models.LocationModel import LocationModel, LocationSchema
+from ..models.LedModel import LedModel, LedSchema
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
-location_api = Blueprint('location_api', __name__)
-location_schema = LocationSchema()
+led_api = Blueprint('led_api', __name__)
+led_schema = LedSchema()
 
-
-@location_api.route('/', methods=['GET'])
+@led_api.route('/', methods=['GET'])
 def get_all():
-    """
-    Get All Locations
-    """
-    posts = LocationModel.get_all()
-    data = location_schema.dump(posts, many=True)
-    return custom_response(data, 200)
+    posts = LedModel.get_all()
+    data = led_schema.dump(posts, many=True)
 
-@location_api.route('/<int:location_id>', methods=['GET'])
-def get_one(location_id):
-    """
-    Get A Location
-    """
-    post = LocationModel.get_one(location_id)
+    retObj = {
+        'data' : data,
+    }
+
+    response = custom_response(retObj, 200)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    print('cors-debug')
+    return response
+
+
+@led_api.route('/<int:led_id>', methods=['GET'])
+def get_one(led_id):
+    post = LedModel.get_one(led_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = location_schema.dump(post)
+    data = led_schema.dump(post)
     return custom_response(data, 200)
-    
-@location_api.route('/', methods=['POST'])
+
+
+@led_api.route('/', methods=['POST'])
 @Auth.auth_required
 def create():
-    """
-    Create Location Function
-    """
     req_data = request.get_json()
     app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
     user = UserModel.get_one_user(g.user.get('id'))
     req_data['owner_id'] = user.id
 
     try:
-        data = location_schema.load(req_data)
+        data = led_schema.load(req_data)
     except ValidationError as err:
         return custom_response(err, 400)
-        
-    post = LocationModel(data)
+
+    post = LedModel(data)
     post.save()
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
     except Exception as e:
         app.logger.error(e)
-    data = location_schema.dump(post)
-    return custom_response(data, 201)    
+    data = led_schema.dump(post)
+    return custom_response(data, 201)
 
-@location_api.route('/<int:location_id>', methods=['PUT'])
-@Auth.auth_required
-def update(location_id):
-    """
-    Update A Location
-    """
+
+@led_api.route('/<int:led_id>', methods=['PUT'])
+# @Auth.auth_required
+def update(led_id):
     req_data = request.get_json()
-    post = LocationModel.get_one(location_id)
+    post = LedModel.get_one(led_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = location_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
+    data = led_schema.dump(post)
+    # if data.get('owner_id') != g.user.get('id'):
+    #     return custom_response({'error': 'permission denied'}, 400)
 
     try:
-        data = location_schema.load(req_data, partial=True)
+        data = led_schema.load(req_data, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
 
     post.update(data)
-    data = location_schema.dump(post)
+    data = led_schema.dump(post)
     return custom_response(data, 200)
 
-@location_api.route('/<int:location_id>', methods=['DELETE'])
+
+@led_api.route('/<int:led_id>', methods=['DELETE'])
 @Auth.auth_required
-def delete(location_id):
-    """
-    Delete A Location
-    """
-    post = LocationModel.get_one(location_id)
+def delete(led_id):
+    post = LedModel.get_one(led_id)
     if not post:
         return custom_response({'error': 'post not found'}, 404)
-    data = location_schema.dump(post)
+    data = led_schema.dump(post)
     if data.get('owner_id') != g.user.get('id'):
         return custom_response({'error': 'permission denied'}, 400)
 
@@ -98,9 +94,6 @@ def delete(location_id):
 
 
 def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
     return Response(
         mimetype="application/json",
         response=json.dumps(res),

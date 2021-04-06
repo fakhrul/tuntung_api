@@ -12,15 +12,17 @@ from .views.UserView import user_api as user_blueprint
 from .views.PaymentView import payment_api as payment_blueprint
 
 from .views.ActivityView import activity_api as activity_blueprint
-from .views.LocationView import location_api as location_blueprint
-from .views.NotificationView import notification_api as notification_blueprint
-from .views.OrganizationView import organization_api as organization_blueprint
-from .views.ProductView import product_api as product_blueprint
-from .views.RoleView import role_api as role_blueprint
+from .views.AdsImageView import ads_image_api as ads_image_blueprint
+from .views.AdvertiserView import advertiser_api as advertiser_blueprint
+from .views.AudienceView import audience_api as audience_blueprint
+from .views.BusinessCategoryView import business_category_api as business_category_blueprint
+from .views.CampaignEnrollView import campaign_enroll_api as campaign_enroll_blueprint
+from .views.CampaignView import campaign_api as campaign_blueprint
+from .views.LedView import led_api as led_blueprint
 from .views.ProfileView import profile_api as profile_blueprint
-from .views.SpeciesView import species_api as species_blueprint
-from .views.TrackHistoryView import track_history_api as track_history_blueprint
+from .views.WalkerView import walker_api as walker_blueprint
 from .views.ConfigView import config_api as config_blueprint
+# from .views.NotificationView import species_api as species_blueprint
 
 
 def create_app(env_name):
@@ -48,40 +50,26 @@ def create_app(env_name):
     seeder = FlaskSeeder()
     seeder.init_app(app, db)
 
+
     app.register_blueprint(user_blueprint, url_prefix='/api/auth')
     # app.register_blueprint(blogpost_blueprint, url_prefix='/api/v1/blogposts')
     app.register_blueprint(payment_blueprint, url_prefix='/api/v1/payment')
 
     app.register_blueprint(activity_blueprint, url_prefix='/api/activity')
-    app.register_blueprint(location_blueprint, url_prefix='/api/location')
-    app.register_blueprint(notification_blueprint,
-                           url_prefix='/api/notification')
-    app.register_blueprint(organization_blueprint,
-                           url_prefix='/api/organization')
-    app.register_blueprint(product_blueprint, url_prefix='/api/product')
-    app.register_blueprint(role_blueprint, url_prefix='/api/role')
+    app.register_blueprint(ads_image_blueprint, url_prefix='/api/ads')
+    app.register_blueprint(advertiser_blueprint, url_prefix='/api/advertiser')
+    app.register_blueprint(audience_blueprint,url_prefix='/api/audience')
+    app.register_blueprint(business_category_blueprint, url_prefix='/api/business')
+    app.register_blueprint(campaign_enroll_blueprint, url_prefix='/api/campaign_enroll')
+    app.register_blueprint(campaign_blueprint, url_prefix='/api/campaign')
+    app.register_blueprint(led_blueprint, url_prefix='/api/led')
     app.register_blueprint(profile_blueprint, url_prefix='/api/profile')
-    app.register_blueprint(species_blueprint, url_prefix='/api/species')
-    app.register_blueprint(track_history_blueprint, url_prefix='/api/trackhistory')
+    app.register_blueprint(walker_blueprint, url_prefix='/api/walker')
     app.register_blueprint(config_blueprint, url_prefix='/api/config')
 
     @app.route('/')
     def index():
-        """
-        example endpoint
-        """
-        app.logger.info('Mostrando los posts del blog')
         return 'TUNTUNG API'
 
-    # @app.after_request
-    # def after_request(response):
-    #     # response.headers.add('Access-Control-Allow-Origin', '*')
-    #     # response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-    #     response.headers.add('Access-Control-Allow-Origin', 'http://localhost:8080')
-    #     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    #     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    #     response.headers.add('Access-Control-Allow-Credentials', 'true')
-    #     print("123123123213213333333333333333333333333333333333333")
-    #     return response
 
     return app

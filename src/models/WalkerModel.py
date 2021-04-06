@@ -2,6 +2,7 @@
 from . import db
 import datetime
 from marshmallow import fields, Schema
+from .LedModel import LedSchema
 
 class WalkerModel(db.Model):
 
@@ -9,6 +10,8 @@ class WalkerModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'), nullable=False)
+    led_list = db.relationship('LedModel', backref='walker', lazy=True)
+    activity_list = db.relationship('ActivityModel', backref='walker', lazy=True)
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
@@ -45,5 +48,7 @@ class WalkerModel(db.Model):
 class WalkerSchema(Schema):
     id = fields.Int(dump_only=True)
     profile_id = fields.Int(required=True)
+    led_list = fields.Nested(LedSchema, many=True)
+    activity_list = fields.Nested(LedSchema, many=True)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)
