@@ -3,22 +3,24 @@
 from flask import Flask, request, json, Response, Blueprint, g, jsonify
 from marshmallow import ValidationError
 from ..models.UserModel import UserModel, UserSchema
+from ..models.ProfileModel import ProfileModel, ProfileSchema
 from ..shared.Authentication import Auth
 
 app = Flask(__name__)
 user_api = Blueprint('user_api', __name__)
 user_schema = UserSchema()
+profile_schema = ProfileSchema()
 
 @user_api.route('/register', methods=['POST'])
 def create():
-    """
-    Create User Function
-    """
     req_data = request.get_json()
-    app.logger.info('-----------> create #'+json.dumps(req_data))
-
+    
     try:
-        data = user_schema.load(req_data)
+        # data = user_schema.load(req_data)
+        data = user_schema.load({
+            "email": req_data["email"],
+            "password": req_data["password"]
+        })
     except ValidationError as err:
         return custom_response(err, 400)
 
@@ -31,13 +33,31 @@ def create():
     user = UserModel(data)
     user.save()
 
-    ser_data = user_schema.dump(user)
-    app.logger.info('-----------> Generating Token #'+json.dumps(req_data))
+    role = 'normal'
+    if req_data.get('role'):
+        role = req_data.get('role')
+    try:
+        profile_data = profile_schema.load({
+            "email": user.email,
+            "user_id": user.id,
+            "role": role
+        })
+    except ValidationError as err:
+        return custom_response(err, 400)
 
-    token = Auth.generate_token(ser_data.get('id'))
-    app.logger.info('-----------> Token generated')
+    profile = ProfileModel(profile_data)
+    profile.save()
 
-    return custom_response({'jwt_token': token}, 201)
+    ser_user = user_schema.dump(user)
+    ser_profile = profile_schema.dump(profile)
+    token = Auth.generate_token(ser_user.get('id'))
+    data = {
+        'token': token,
+        'user': ser_user,
+        'profile': ser_profile,
+        'status': 'success'
+    }
+    return custom_response(data, 201)
 
 @user_api.route('/', methods=['GET'])
 @Auth.auth_required
@@ -46,19 +66,17 @@ def get_all():
     ser_users = user_schema.dump(users, many=True)
     return custom_response(ser_users, 200)
 
-@user_api.route('/login', methods=['POST'])
-def login():
-    """
-    User Login Function
-    """
+@user_api.route('/loginAdmin', methods=['POST'])
+def loginAdmin():
     req_data = request.get_json()
-    # app.logger.info('llega siquiera --------------#'+json.dumps(req_data))
     
     try:
-        data = user_schema.load(req_data, partial=True)
+        data = user_schema.load({
+            "email": req_data.get("email"),
+            "password": req_data.get("password")
+            }, partial=True)
     except ValidationError as err:
         return custom_response(err, 400)
-
     if not data.get('email') or not data.get('password'):
         return custom_response({'error': 'you need email and password to sign in'}, 400)
 
@@ -68,14 +86,54 @@ def login():
     if not user.check_hash(data.get('password')):
         return custom_response({'error': 'invalid credentials'}, 400)
 
-    ser_data = user_schema.dump(user)
+    profile = ProfileModel.get_profile_by_email(data.get('email'))
+    if not profile:
+        return custom_response({'error': 'no profile found'}, 400)
+    if profile.role != 'admin':
+        return custom_response({'error': 'invalid role'}, 400)
 
-
-    token = Auth.generate_token(ser_data.get('id'))
-
+    ser_user = user_schema.dump(user)
+    ser_profile = profile_schema.dump(profile)
+    token = Auth.generate_token(ser_user.get('id'))
     data = {
         'token': token,
-        'user': ser_data,
+        'user': ser_user,
+        'profile': ser_profile,
+        'status': 'success'
+    }
+    return custom_response(data, 200)
+
+@user_api.route('/login', methods=['POST'])
+def login():
+    req_data = request.get_json()
+    
+    try:
+        data = user_schema.load({
+            "email": req_data.get("email"),
+            "password": req_data.get("password")
+            }, partial=True)
+    except ValidationError as err:
+        return custom_response(err, 400)
+    if not data.get('email') or not data.get('password'):
+        return custom_response({'error': 'you need email and password to sign in'}, 400)
+
+    user = UserModel.get_user_by_email(data.get('email'))
+    if not user:
+        return custom_response({'error': 'no user found'}, 400)
+    if not user.check_hash(data.get('password')):
+        return custom_response({'error': 'invalid credentials'}, 400)
+
+    profile = ProfileModel.get_profile_by_email(data.get('email'))
+    if not profile:
+        return custom_response({'error': 'no profile found'}, 400)
+
+    ser_user = user_schema.dump(user)
+    ser_profile = profile_schema.dump(profile)
+    token = Auth.generate_token(ser_user.get('id'))
+    data = {
+        'token': token,
+        'user': ser_user,
+        'profile': ser_profile,
         'status': 'success'
     }
     return custom_response(data, 200)

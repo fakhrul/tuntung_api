@@ -9,11 +9,11 @@ class ProfileModel(db.Model):
     __tablename__ = 'profile'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    user = db.relationship("UserModel", back_populates="user")
-
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # user = db.relationship("UserModel", uselist=False, backref="profile")
+    role = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(128), nullable=False)
-    name = db.Column(db.String(128), nullable=False)
+    name = db.Column(db.String(128))
     phone = db.Column(db.String(50))
     address1 = db.Column(db.String(250))
     address2 = db.Column(db.String(250))
@@ -23,16 +23,13 @@ class ProfileModel(db.Model):
     city = db.Column(db.String(50))
     postcode = db.Column(db.String(10))
 
-    advertiser = db.relationship('AdvertiserModel',
-        secondary=association_profile_advertiser, lazy='subquery',
-        backref=db.backref('profile', lazy=True))
-
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
         self.user_id = data.get('user_id')
         self.email = data.get('email')
+        self.role = data.get('role')
         self.name = data.get('name')
         self.phone = data.get('phone')
         self.address1 = data.get('address1')
@@ -67,24 +64,29 @@ class ProfileModel(db.Model):
     def get_one(id):
         return ProfileModel.query.get(id)
 
+    @staticmethod
+    def get_profile_by_email(value):
+        return ProfileModel.query.filter_by(email=value).first()
+
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
 class ProfileSchema(Schema):
     id = fields.Int(dump_only=True)
     user_id = fields.Int(required=True)
+    role = fields.Str(required=True)
     email = fields.Str(required=True)
-    name = fields.Str(required=True)
-    phone = fields.Str(required=True)
-    address1 = fields.Str(required=False)
-    address2 = fields.Str(required=False)
-    address3 = fields.Str(required=False)
-    country = fields.Str(required=False)
-    state = fields.Str(required=False)
-    city = fields.Str(required=False)
-    postcode = fields.Str(required=False)
+    name = fields.Str(allow_none=True)
+    phone = fields.Str(allow_none=True)
+    address1 = fields.Str(allow_none=True)
+    address2 = fields.Str(allow_none=True)
+    address3 = fields.Str(allow_none=True)
+    country = fields.Str(allow_none=True)
+    state = fields.Str(allow_none=True)
+    city = fields.Str(allow_none=True)
+    postcode = fields.Str(allow_none=True)
 
-    advertiser = fields.Nested(AdvertiserSchema, many=True)
+    # advertiser = fields.Nested(AdvertiserSchema, many=True)
     
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)
