@@ -1,6 +1,6 @@
 # /src/views/BusinessCategoryView.py
 from flask import Flask, request, g, Blueprint, json, Response
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
 from ..models.BusinessCategoryModel import BusinessCategoryModel, BusinessCategorySchema
@@ -8,7 +8,7 @@ from ..models.UserModel import UserModel
 
 app = Flask(__name__)
 business_category_api = Blueprint('business_category_api', __name__)
-business_category_schema = BusinessCategorySchema()
+business_category_schema = BusinessCategorySchema(unknown=EXCLUDE)
 
 @business_category_api.route('/', methods=['GET'])
 def get_all():
@@ -31,16 +31,19 @@ def get_one(business_category_id):
     if not post:
         return custom_response({'error': 'post not found'}, 404)
     data = business_category_schema.dump(post)
-    return custom_response(data, 200)
+    retObj = {
+        'data' : data
+    }
+    return custom_response(retObj, 200)
 
 
-@business_category_api.route('/', methods=['POST'])
+@business_category_api.route('', methods=['POST'])
 @Auth.auth_required
 def create():
     req_data = request.get_json()
-    app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
-    user = UserModel.get_one_user(g.user.get('id'))
-    req_data['owner_id'] = user.id
+    # app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
+    # user = UserModel.get_one_user(g.user.get('id'))
+    # req_data['owner_id'] = user.id
 
     try:
         data = business_category_schema.load(req_data)
@@ -86,8 +89,8 @@ def delete(business_category_id):
     if not post:
         return custom_response({'error': 'post not found'}, 404)
     data = business_category_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
+    # if data.get('owner_id') != g.user.get('id'):
+    #     return custom_response({'error': 'permission denied'}, 400)
 
     post.delete()
     return custom_response({'message': 'deleted'}, 204)

@@ -81,7 +81,7 @@ class Auth():
                 )
             
             user_id = data['data']['user_id']
-            check_user = UserModel.get_one_user(user_id)
+            check_user = UserModel.get_one(user_id)
             if not check_user:
                 return Response(
                   mimetype="application/json",

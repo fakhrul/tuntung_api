@@ -1,6 +1,6 @@
 # /src/views/AudienceView.py
 from flask import Flask, request, g, Blueprint, json, Response
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
 from ..models.AudienceModel import AudienceModel, AudienceSchema
@@ -8,7 +8,7 @@ from ..models.UserModel import UserModel
 
 app = Flask(__name__)
 audience_api = Blueprint('audience_api', __name__)
-audience_schema = AudienceSchema()
+audience_schema = AudienceSchema(unknown=EXCLUDE)
 
 @audience_api.route('/', methods=['GET'])
 def get_all():
@@ -31,17 +31,17 @@ def get_one(audience_id):
     if not post:
         return custom_response({'error': 'post not found'}, 404)
     data = audience_schema.dump(post)
-    return custom_response(data, 200)
+    retObj = {
+        'data' : data,
+    }
+
+    return custom_response(retObj, 200)
 
 
-@audience_api.route('/', methods=['POST'])
+@audience_api.route('', methods=['POST'])
 @Auth.auth_required
 def create():
     req_data = request.get_json()
-    app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
-    user = UserModel.get_one_user(g.user.get('id'))
-    req_data['owner_id'] = user.id
-
     try:
         data = audience_schema.load(req_data)
     except ValidationError as err:
@@ -49,11 +49,7 @@ def create():
 
     post = AudienceModel(data)
     post.save()
-    try:
-        app.logger.info('llego al correo ?------ ')
-        Mailing.send_mail(user)
-    except Exception as e:
-        app.logger.error(e)
+
     data = audience_schema.dump(post)
     return custom_response(data, 201)
 
@@ -86,8 +82,6 @@ def delete(audience_id):
     if not post:
         return custom_response({'error': 'post not found'}, 404)
     data = audience_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
 
     post.delete()
     return custom_response({'message': 'deleted'}, 204)

@@ -48,7 +48,7 @@ class UserModel(db.Model):
         return UserModel.query.all()
 
     @staticmethod
-    def get_one_user(id):
+    def get_one(id):
         return UserModel.query.get(id)
         
     @staticmethod
