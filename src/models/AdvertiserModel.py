@@ -10,8 +10,9 @@ class AdvertiserModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
-    email = db.Column(db.String(128), nullable=False)
+    profile_email = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(128))
     phone = db.Column(db.Numeric(14, 0))
     address1 = db.Column(db.String(250))
     address2 = db.Column(db.String(250))
@@ -33,7 +34,9 @@ class AdvertiserModel(db.Model):
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
-        self.code = data.get('code')
+        self.profile_id = data.get('profile_id')
+        self.profile_email = data.get('profile_email')
+
         self.name = data.get('name')
         self.email = data.get('email')
         self.name = data.get('name')
@@ -80,20 +83,22 @@ class AdvertiserModel(db.Model):
 
 class AdvertiserSchema(Schema):
     id = fields.Int(dump_only=True)
-    email = fields.Str(required=False)
+    profile_id = fields.Str(required=True)
+    profile_email = fields.Str(required=True)
     name = fields.Str(required=True)
-    phone = fields.Str(required=False)
-    address1 = fields.Str(required=False)
-    address2 = fields.Str(required=False)
-    address3 = fields.Str(required=False)
-    country = fields.Str(required=False)
-    state = fields.Str(required=False)
-    city = fields.Str(required=False)
-    postcode = fields.Str(required=False)
+    email = fields.Str(allow_none=True)
+    phone = fields.Str(allow_none=True)
+    address1 = fields.Str(allow_none=True)
+    address2 = fields.Str(allow_none=True)
+    address3 = fields.Str(allow_none=True)
+    country = fields.Str(allow_none=True)
+    state = fields.Str(allow_none=True)
+    city = fields.Str(allow_none=True)
+    postcode = fields.Str(allow_none=True)
 
-    contact_name = fields.Str(required=False)
-    contact_email = fields.Str(required=False)
-    contact_phone = fields.Str(required=False)
+    contact_name = fields.Str(allow_none=True)
+    contact_email = fields.Str(allow_none=True)
+    contact_phone = fields.Str(allow_none=True)
 
     business_category = fields.Nested(BusinessCategorySchema, many=True)
     

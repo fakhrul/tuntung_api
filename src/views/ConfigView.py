@@ -8,11 +8,11 @@ from marshmallow import ValidationError
 # from ..models.NotificationModel import NotificationModel
 # from ..models.OrganizationModel import OrganizationModel
 # from ..models.ProductModel import ProductModel
-# from ..models.ProfileModel import ProfileModel
+from ..models.ProfileModel import ProfileModel
 # from ..models.RoleModel import RoleModel
 # from ..models.SpeciesModel import SpeciesModel
 # from ..models.TrackHistoryModel import TrackHistoryModel
-# from ..models.UserModel import UserModel
+from ..models.UserModel import UserModel
 
 app = Flask(__name__)
 config_api = Blueprint('config_api', __name__)
@@ -54,6 +54,36 @@ def seed():
     #                    'address': 'Negeri Sembilan, Malaysia'}).save()
     # OrganizationModel({'code': '3', 'name': 'Persatuan Penternak Kelulut Terengganu',
     #                    'address': 'Terengganu, Malaysia'}).save()
+
+    user1 = UserModel({
+        'email': 'admin@tuntung.com',
+        'password': 'qwe123'
+    })
+    user1.save()
+
+    user2 = UserModel({
+        'email': 'user@tuntung.com',
+        'password': 'qwe123'
+    })
+    user2.save()
+
+    ProfileModel({
+        'user_id': user1.id,
+        'name': 'Admin 1',
+        'email': user1.email,
+        'role': 'admin'
+    }).save()
+
+    ProfileModel({
+        'user_id': user2.id,
+        'name': 'Admin 1',
+        'email': user2.email,
+        'role': 'normal'
+    }).save()
+
+    # BusinessCategory{
+    #     'name'
+    # }
 
     # ProductModel({
     #     'code': 'AAA',
