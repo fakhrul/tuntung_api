@@ -1,7 +1,7 @@
 # src/models/CampaignModel.py
 from . import db
 import datetime
-from marshmallow import fields, Schema
+from marshmallow import fields, Schema, EXCLUDE
 from .AdsImageModel import AdsImageSchema
 from .CampaignScheduleModel import CampaignScheduleSchema
 from .AudienceModel import AudienceSchema
@@ -38,10 +38,11 @@ class CampaignModel(db.Model):
         self.advertiser_id = data.get('advertiser_id')
         self.audience_id = data.get('audience_id')
         self.name = data.get('name')
-        self.start = data.get('start')
-        self.end = data.get('end')
+        # self.advertiser = data.get('advertiser')
+        # self.start = data.get('start')
+        # self.end = data.get('end')
         self.total_walker = data.get('total_walker')
-        self.fee = data.get('fee')
+        # self.fee = data.get('fee')
         self.status = data.get('status')
 
         self.created_at = datetime.datetime.utcnow()
@@ -80,11 +81,16 @@ class CampaignSchema(Schema):
     audience_id = fields.Int(required=True)
     # start = fields.DateTime(required=True)
     # end = fields.DateTime(required=True)
-    total_walker = fields.Int()
+    total_walker = fields.Int(allow_none=True)
     # fee = fields.Float(required=False)
-    status = fields.Str()
-    advertiser = fields.Nested(AdvertiserSchema, many=False)
-    audience = fields.Nested(AudienceSchema, many=False)
-    campaign_schedule_list = fields.Nested(CampaignScheduleSchema, many=True)
+    status = fields.Str(allow_none=True)
+    # advertiser = fields.Nested(AdvertiserSchema, many=False,  default=None, only=('id', 'name'))
+    # audience = fields.Nested(AudienceSchema, many=False, default=None, only=('id', 'name'))
+    # campaign_schedule_list = fields.Nested(CampaignScheduleSchema, many=True, default=None)
+    # advertiser = fields.Nested(AdvertiserSchema, exclude=('advertiser.id',))
+    advertiser = fields.Nested(AdvertiserSchema, many=False,)
+    audience = fields.Nested(AudienceSchema)
+    campaign_schedule_list = fields.Nested(CampaignScheduleSchema, many=True, default=None)
+
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

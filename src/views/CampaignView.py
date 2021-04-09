@@ -43,11 +43,12 @@ def create():
     req_data = request.get_json()
     print(req_data)
     try:
-        data = campaign_schema.load(req_data)
+        schema = CampaignSchema(exclude=['campaign_schedule_list', 'advertiser', 'audience', ], unknown=EXCLUDE)
+        data = schema.load(req_data)
         campaign = CampaignModel(data)
         campaign.save()
 
-        scheduleList = req_data['scheduleList']
+        scheduleList = req_data['campaign_schedule_list']
         for scheduleJson in scheduleList:
             scheduleJson['campaign_id'] = campaign.id
             data = campaign_schedule_schema.load(scheduleJson)
@@ -69,37 +70,33 @@ def create():
 
 
 @campaign_api.route('/<int:campaign_id>', methods=['PUT'])
-# @Auth.auth_required
+@Auth.auth_required
 def update(campaign_id):
     req_data = request.get_json()
-    post = CampaignModel.get_one(campaign_id)
-    if not post:
-        return custom_response({'error': 'post not found'}, 404)
-    data = campaign_schema.dump(post)
-    # if data.get('owner_id') != g.user.get('id'):
-    #     return custom_response({'error': 'permission denied'}, 400)
+    campaign = CampaignModel.get_one(campaign_id)
+    if not campaign:
+        return custom_response_error('Data not found', 404)
 
     try:
-        data = campaign_schema.load(req_data, partial=True)
-    except ValidationError as err:
-        return custom_response(err, 400)
+        schema = CampaignSchema(exclude=['campaign_schedule_list', 'advertiser', 'audience', ], unknown=EXCLUDE)
+        data = schema.load(req_data, partial=True)
+        campaign.update(data)
+    except Exception as err:
+        app.logger.info(err)
+        return custom_response_error(str(err), 400)
 
-    post.update(data)
-    data = campaign_schema.dump(post)
+    data = campaign_schema.dump(campaign)
     return custom_response(data, 200)
 
 
 @campaign_api.route('/<int:campaign_id>', methods=['DELETE'])
 @Auth.auth_required
 def delete(campaign_id):
-    post = CampaignModel.get_one(campaign_id)
-    if not post:
-        return custom_response({'error': 'post not found'}, 404)
-    data = campaign_schema.dump(post)
-    if data.get('owner_id') != g.user.get('id'):
-        return custom_response({'error': 'permission denied'}, 400)
-
-    post.delete()
+    campaign = CampaignModel.get_one(campaign_id)
+    if not campaign:
+        return custom_response({'error': 'Data not found'}, 404)
+    data = campaign_schema.dump(campaign)
+    campaign.delete()
     return custom_response({'message': 'deleted'}, 204)
 
 

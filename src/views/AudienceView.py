@@ -5,6 +5,7 @@ from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
 from ..models.AudienceModel import AudienceModel, AudienceSchema
 from ..models.UserModel import UserModel
+from ..shared.Utility import custom_response_data, custom_response_error, custom_response
 
 app = Flask(__name__)
 audience_api = Blueprint('audience_api', __name__)
@@ -44,11 +45,10 @@ def create():
     req_data = request.get_json()
     try:
         data = audience_schema.load(req_data)
-    except ValidationError as err:
-        return custom_response(err, 400)
-
-    post = AudienceModel(data)
-    post.save()
+        post = AudienceModel(data)
+        post.save()
+    except Exception as err:
+        return custom_response_error(str(err), 400)
 
     data = audience_schema.dump(post)
     return custom_response(data, 201)
@@ -87,9 +87,9 @@ def delete(audience_id):
     return custom_response({'message': 'deleted'}, 204)
 
 
-def custom_response(res, status_code):
-    return Response(
-        mimetype="application/json",
-        response=json.dumps(res),
-        status=status_code
-    )
+# def custom_response(res, status_code):
+#     return Response(
+#         mimetype="application/json",
+#         response=json.dumps(res),
+#         status=status_code
+#     )
