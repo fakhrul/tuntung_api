@@ -30,6 +30,12 @@ class CampaignModel(db.Model):
         order_by='desc(CampaignScheduleModel.start_at)')
         # lazy=True)
     # ads_image = db.relationship('AdsImageModel', backref='campaign', lazy=True)
+    ads_image_list = db.relationship(
+        'AdsImageModel',
+        backref='campaign',
+        cascade='all, delete, delete-orphan',
+        single_parent=True,
+        order_by='desc(AdsImageModel.created_at)')
 
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
@@ -91,6 +97,7 @@ class CampaignSchema(Schema):
     advertiser = fields.Nested(AdvertiserSchema, many=False,)
     audience = fields.Nested(AudienceSchema)
     campaign_schedule_list = fields.Nested(CampaignScheduleSchema, many=True, default=None)
+    ads_image_list = fields.Nested(AdsImageSchema, many=True, default=None)
 
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

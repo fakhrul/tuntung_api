@@ -13,11 +13,13 @@ class AdsImageModel(db.Model):
     name = db.Column(db.String(50), nullable=False)
     img_filename = db.Column(db.String(250), nullable=False)
     img_data = db.Column(db.LargeBinary)
+    created_at = db.Column(db.DateTime)
+    modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
         self.name = data.get('name')
         self.advertiser_id = data.get('advertiser_id')
-        self.campaign_id = data.get('campaign_id')
+        # self.campaign_id = data.get('campaign_id')
         self.img_filename = data.get('img_filename')
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
@@ -50,7 +52,7 @@ class AdsImageModel(db.Model):
 class AdsImageSchema(Schema):
     id = fields.Int(dump_only=True)
     advertiser_id = fields.Int(required=True)
-    campaign_id = fields.Int(required=False)
+    # campaign_id = fields.Int(required=False)
     name = fields.Str(required=True)
     img_filename = fields.Str(required=True)
     # img_data = fields.LargeBinary(required=True)

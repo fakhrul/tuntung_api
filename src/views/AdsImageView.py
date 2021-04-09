@@ -5,6 +5,10 @@ from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
 from ..models.AdsImageModel import AdsImageModel, AdsImageSchema
 from ..models.UserModel import UserModel
+from ..shared.Utility import custom_response_data, custom_response_error, custom_response
+import base64
+from PIL import Image
+from io import BytesIO
 
 app = Flask(__name__)
 ads_image_api = Blueprint('ads_image_api', __name__)
@@ -25,21 +29,24 @@ def get_one(ads_image_id):
     data = ads_image_schema.dump(post)
     return custom_response(data, 200)
     
-@ads_image_api.route('/', methods=['POST'])
+@ads_image_api.route('', methods=['POST'])
 @Auth.auth_required
 def create():
     req_data = request.get_json()
-    app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
-    user = UserModel.get_one_user(g.user.get('id'))
-    req_data['owner_id'] = user.id
-
     try:
-        data = ads_image_schema.load(req_data)
-    except ValidationError as err:
-        return custom_response(err, 400)
+        base64_png =  req_data['image']
+        code = base64.b64decode(base64_png.split(',')[1]) 
+        image_decoded = Image.open(BytesIO(code))
+        # image_decoded.save(Path(app.config['UPLOAD_FOLDER']) / 'image.png')
+        image_decoded.save('image.png')
+        return custom_response({'result': 'success'},200)
         
-    post = AdsImageModel(data)
-    post.save()
+        # data = ads_image_schema.load(req_data)
+        # post = AdsImageModel(data)
+        # post.save()
+    except Exception as err:
+        return custom_response_error(str(err), 400)
+        
     try:
         app.logger.info('llego al correo ?------ ')
         Mailing.send_mail(user)
@@ -82,12 +89,12 @@ def delete(ads_image_id):
     return custom_response({'message': 'deleted'}, 204)
 
 
-def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
-    return Response(
-        mimetype="application/json",
-        response=json.dumps(res),
-        status=status_code
-    )
+# def custom_response(res, status_code):
+#     """
+#     Custom Response Function
+#     """
+#     return Response(
+#         mimetype="application/json",
+#         response=json.dumps(res),
+#         status=status_code
+#     )
