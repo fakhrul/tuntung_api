@@ -10,8 +10,8 @@ from marshmallow import ValidationError
 # from ..models.ProductModel import ProductModel
 from ..models.ProfileModel import ProfileModel
 # from ..models.RoleModel import RoleModel
-# from ..models.SpeciesModel import SpeciesModel
-# from ..models.TrackHistoryModel import TrackHistoryModel
+from ..models.AudienceModel import AudienceModel
+from ..models.AdvertiserModel import AdvertiserModel
 from ..models.UserModel import UserModel
 
 app = Flask(__name__)
@@ -74,12 +74,27 @@ def seed():
         'role': 'admin'
     }).save()
 
-    ProfileModel({
+    profileUser = ProfileModel({
         'user_id': user2.id,
-        'name': 'Admin 1',
+        'name': 'User 1',
         'email': user2.email,
         'role': 'normal'
-    }).save()
+    })
+    profileUser.save()
+
+    advertiser1 = AdvertiserModel({
+        'profile_id': profileUser.id,
+        'profile_email': profileUser.email,
+        'name': 'Universal Music'
+    })
+    advertiser1.save()
+
+    audience = AudienceModel({
+        'name': 'Hari Raya 2021',
+        'location': 'Bukit Bintang'
+    })
+    audience.save()
+
 
     # BusinessCategory{
     #     'name'

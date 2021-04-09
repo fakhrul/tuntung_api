@@ -3,6 +3,9 @@ from . import db
 import datetime
 from marshmallow import fields, Schema
 from .AdsImageModel import AdsImageSchema
+from .CampaignScheduleModel import CampaignScheduleSchema
+from .AudienceModel import AudienceSchema
+from .AdvertiserModel import AdvertiserSchema
 
 class CampaignModel(db.Model):
 
@@ -10,14 +13,23 @@ class CampaignModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'))
+    advertiser = db.relationship("AdvertiserModel", uselist=False, backref="campaign")
     audience_id = db.Column(db.Integer, db.ForeignKey('audience.id'))
+    audience = db.relationship("AudienceModel", uselist=False, backref="campaign")
     name = db.Column(db.String(128), nullable=False)
-    start = db.Column(db.DateTime)
-    end = db.Column(db.DateTime)
+    # start = db.Column(db.DateTime)
+    # end = db.Column(db.DateTime)
     total_walker = db.Column(db.Integer)
-    fee = db.Column(db.Float)
+    # fee = db.Column(db.Float)
     status = db.Column(db.String(50))
-    ads_image = db.relationship('AdsImageModel', backref='campaign', lazy=True)
+    campaign_schedule_list = db.relationship(
+        'CampaignScheduleModel',
+        backref='campaign',
+        cascade='all, delete, delete-orphan',
+        single_parent=True,
+        order_by='desc(CampaignScheduleModel.start_at)')
+        # lazy=True)
+    # ads_image = db.relationship('AdsImageModel', backref='campaign', lazy=True)
 
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
@@ -64,14 +76,15 @@ class CampaignSchema(Schema):
 
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
-    advertiser_id = fields.Str(required=True)
-    audience_id = fields.Str(required=True)
-    start = fields.DateTime(required=True)
-    end = fields.DateTime(required=True)
-    total_walker = fields.Int(required=False)
-    fee = fields.Float(required=False)
-    status = fields.Str(required=False)
-    ads_image = fields.Nested(AdsImageSchema, many=True)
-
+    advertiser_id = fields.Int(required=True)
+    audience_id = fields.Int(required=True)
+    # start = fields.DateTime(required=True)
+    # end = fields.DateTime(required=True)
+    total_walker = fields.Int()
+    # fee = fields.Float(required=False)
+    status = fields.Str()
+    advertiser = fields.Nested(AdvertiserSchema, many=False)
+    audience = fields.Nested(AudienceSchema, many=False)
+    campaign_schedule_list = fields.Nested(CampaignScheduleSchema, many=True)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

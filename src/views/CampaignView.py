@@ -1,20 +1,23 @@
 # /src/views/CampaignView.py
 from flask import Flask, request, g, Blueprint, json, Response
-from marshmallow import ValidationError
+from marshmallow import ValidationError, EXCLUDE
 from ..shared.Authentication import Auth
 from ..shared.Mailing import Mailing
 from ..models.CampaignModel import CampaignModel, CampaignSchema
+from ..models.CampaignScheduleModel import CampaignScheduleModel,CampaignScheduleSchema
 from ..models.UserModel import UserModel
+from ..shared.Utility import custom_response_data, custom_response_error
 
 app = Flask(__name__)
 campaign_api = Blueprint('campaign_api', __name__)
-campaign_schema = CampaignSchema()
+campaign_schema = CampaignSchema(unknown=EXCLUDE)
+
+campaign_schedule_schema = CampaignScheduleSchema(unknown=EXCLUDE)
 
 @campaign_api.route('/', methods=['GET'])
 def get_all():
-    posts = CampaignModel.get_all()
-    data = campaign_schema.dump(posts, many=True)
-
+    campaign = CampaignModel.get_all()
+    data = campaign_schema.dump(campaign, many=True)
     retObj = {
         'data' : data,
     }
@@ -31,31 +34,38 @@ def get_one(campaign_id):
     if not post:
         return custom_response({'error': 'post not found'}, 404)
     data = campaign_schema.dump(post)
-    return custom_response(data, 200)
+    return custom_response_data(data, 200)
 
 
-@campaign_api.route('/', methods=['POST'])
+@campaign_api.route('', methods=['POST'])
 @Auth.auth_required
 def create():
     req_data = request.get_json()
-    app.logger.info('llega siquiera blog--------------#'+json.dumps(req_data))
-    user = UserModel.get_one_user(g.user.get('id'))
-    req_data['owner_id'] = user.id
-
+    print(req_data)
     try:
         data = campaign_schema.load(req_data)
-    except ValidationError as err:
-        return custom_response(err, 400)
+        campaign = CampaignModel(data)
+        campaign.save()
 
-    post = CampaignModel(data)
-    post.save()
-    try:
-        app.logger.info('llego al correo ?------ ')
-        Mailing.send_mail(user)
-    except Exception as e:
-        app.logger.error(e)
-    data = campaign_schema.dump(post)
-    return custom_response(data, 201)
+        scheduleList = req_data['scheduleList']
+        for scheduleJson in scheduleList:
+            scheduleJson['campaign_id'] = campaign.id
+            data = campaign_schedule_schema.load(scheduleJson)
+            schedule = CampaignScheduleModel(data)
+            schedule.save()
+    except Exception as err:
+        app.logger.info(err)
+        return custom_response_error(str(err), 400)
+    # except ValidationError as err:
+    #     return custom_response(err, 400)
+
+    # try:
+    #     app.logger.info('llego al correo ?------ ')
+    #     Mailing.send_mail(user)
+    # except Exception as e:
+    #     app.logger.error(e)
+    data = campaign_schema.dump(campaign)
+    return custom_response_data(data, 201)
 
 
 @campaign_api.route('/<int:campaign_id>', methods=['PUT'])
