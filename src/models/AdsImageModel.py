@@ -2,6 +2,7 @@
 from . import db
 import datetime
 from marshmallow import fields, Schema
+from .AdvertiserModel import AdvertiserSchema
 
 class AdsImageModel(db.Model):
 
@@ -10,17 +11,19 @@ class AdsImageModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     advertiser_id = db.Column(db.Integer, db.ForeignKey('advertiser.id'))
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'))
+    advertiser = db.relationship("AdvertiserModel", uselist=False, backref="ads_image")
     name = db.Column(db.String(50), nullable=False)
-    img_filename = db.Column(db.String(250), nullable=False)
-    img_data = db.Column(db.LargeBinary)
+    # campaign_list = db.relationship(
+    #     'CampaignModel',
+    #     backref='ads_image',
+    #     cascade='all, delete, delete-orphan',
+    #     single_parent=True)
     created_at = db.Column(db.DateTime)
     modified_at = db.Column(db.DateTime)
 
     def __init__(self, data):
         self.name = data.get('name')
         self.advertiser_id = data.get('advertiser_id')
-        # self.campaign_id = data.get('campaign_id')
-        self.img_filename = data.get('img_filename')
         self.created_at = datetime.datetime.utcnow()
         self.modified_at = datetime.datetime.utcnow()
 
@@ -46,16 +49,17 @@ class AdsImageModel(db.Model):
     def get_one(id):
         return AdsImageModel.query.get(id)
 
+    @staticmethod
+    def get_by_advertiser_id(value):
+        return AdsImageModel.query.filter_by(advertiser_id=value).all()
+
     def __repr__(self):
         return '<id {}>'.format(self.id)
 
 class AdsImageSchema(Schema):
     id = fields.Int(dump_only=True)
     advertiser_id = fields.Int(required=True)
-    # campaign_id = fields.Int(required=False)
+    advertiser = fields.Nested(AdvertiserSchema, many=False)    
     name = fields.Str(required=True)
-    img_filename = fields.Str(required=True)
-    # img_data = fields.LargeBinary(required=True)
-    
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

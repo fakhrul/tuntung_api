@@ -2,7 +2,7 @@
 from . import db, association_profile_advertiser
 import datetime
 from marshmallow import fields, Schema
-from .AdvertiserModel import AdvertiserSchema
+# from .AdvertiserModel import AdvertiserSchema
 
 class ProfileModel(db.Model):
 

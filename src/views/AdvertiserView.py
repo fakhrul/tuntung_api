@@ -41,9 +41,12 @@ def get_one(advertiser_id):
 def create():
     req_data = request.get_json()
     try:
-        data = advertiser_schema.load(req_data)
+        schema = AdvertiserSchema(exclude=['profile', ], unknown=EXCLUDE)
+        data = schema.load(req_data)
         post = AdvertiserModel(data)
         post.save()
+        data = schema.dump(post)
+        return custom_response_data(data, 201)
     except Exception as err:
         app.logger.info(err)
         return custom_response_error(str(err), 400)
@@ -52,13 +55,11 @@ def create():
     #     return custom_response_error("Validation Exception", 400)
         # return custom_response("Validation Error", 400)
 
-    try:
-        app.logger.info('llego al correo ?------ ')
-        Mailing.send_mail(user)
-    except Exception as e:
-        app.logger.error(e)
-    data = advertiser_schema.dump(post)
-    return custom_response_data(data, 201)
+    # try:
+    #     app.logger.info('llego al correo ?------ ')
+    #     Mailing.send_mail(user)
+    # except Exception as e:
+    #     app.logger.error(e)
 
 
 @advertiser_api.route('/<int:advertiser_id>', methods=['PUT'])

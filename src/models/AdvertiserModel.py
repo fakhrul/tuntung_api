@@ -3,6 +3,7 @@ from . import db, assocication_advertiser_business
 import datetime
 from marshmallow import fields, Schema
 from .BusinessCategoryModel import BusinessCategorySchema
+from .ProfileModel import ProfileSchema
 
 class AdvertiserModel(db.Model):
 
@@ -10,6 +11,7 @@ class AdvertiserModel(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     profile_id = db.Column(db.Integer, db.ForeignKey('profile.id'))
+    profile = db.relationship("ProfileModel", uselist=False, backref="advertiser")
     profile_email = db.Column(db.String(128), nullable=False)
     name = db.Column(db.String(128), nullable=False)
     email = db.Column(db.String(128))
@@ -83,7 +85,7 @@ class AdvertiserModel(db.Model):
 
 class AdvertiserSchema(Schema):
     id = fields.Int(dump_only=True)
-    profile_id = fields.Str(required=True)
+    profile_id = fields.Int(required=True)
     profile_email = fields.Str(required=True)
     name = fields.Str(required=True)
     email = fields.Str(allow_none=True)
@@ -101,6 +103,6 @@ class AdvertiserSchema(Schema):
     contact_phone = fields.Str(allow_none=True)
 
     business_category = fields.Nested(BusinessCategorySchema, many=True)
-    
+    profile = fields.Nested(ProfileSchema, many=False,)
     created_at = fields.DateTime(dump_only=True)
     modified_at = fields.DateTime(dump_only=True)

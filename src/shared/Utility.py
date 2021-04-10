@@ -14,6 +14,18 @@ def custom_response_data(data, status_code):
         status=status_code
     )
 
+def custom_response_success():
+    msg = {
+        "status": "success",
+        "message" : ""
+    }
+
+    return Response(
+        mimetype="application/json",
+        response=json.dumps(msg),
+        status=200
+    )
+
 def custom_response_error(message, status_code):
     msg = {
         "status": "error",

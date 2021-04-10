@@ -21,7 +21,7 @@ class Development(object):
     # MAIL_USE_SSL = False
     # MAIL_USE_TLS = os.getenv('MAIL_USE_TLS')
     # MAIL_USE_SSL = os.getenv('MAIL_USE_SSL')
-    ETHEREUM_ENDPOINT_URI = os.getenv('ETHEREUM_ENDPOINT_URI')
+    IMAGE_FOLDER = os.getenv('IMAGE_FOLDER')
 
 class Production(object):
     """
@@ -38,6 +38,7 @@ class Production(object):
     # MAIL_USE_TLS = False
     # MAIL_USE_SSL = False
     ETHEREUM_ENDPOINT_URI = os.getenv('ETHEREUM_ENDPOINT_URI')
+    IMAGE_FOLDER = os.getenv('IMAGE_FOLDER')
 
 app_config = {
     'development': Development,
