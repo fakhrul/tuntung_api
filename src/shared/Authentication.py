@@ -69,7 +69,7 @@ class Auth():
                 return Response(
                     mimetype="application/json",
                     response=json.dumps({'error': 'Authentication token is not available, please login to get one'}),
-                    status=400
+                    status=401
                 )
             token = request.headers.get('api-token')
             data = Auth.decode_token(token)
@@ -77,7 +77,7 @@ class Auth():
                 return Response(
                     mimetype="application/json",
                     response=json.dumps(data['error']),
-                    status=400
+                    status=401
                 )
             
             user_id = data['data']['user_id']
@@ -86,7 +86,7 @@ class Auth():
                 return Response(
                   mimetype="application/json",
                   response=json.dumps({'error': 'user does not exist, invalid token'}),
-                  status=400
+                  status=401
                 )
             g.user = {'id': user_id}
             return func(*args, **kwargs)

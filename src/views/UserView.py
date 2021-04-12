@@ -5,6 +5,7 @@ from marshmallow import ValidationError
 from ..models.UserModel import UserModel, UserSchema
 from ..models.ProfileModel import ProfileModel, ProfileSchema
 from ..shared.Authentication import Auth
+from ..shared.Utility import custom_response_data, custom_response_error, custom_response_success, custom_response
 
 app = Flask(__name__)
 user_api = Blueprint('user_api', __name__)
@@ -21,43 +22,45 @@ def create():
             "email": req_data["email"],
             "password": req_data["password"]
         })
-    except ValidationError as err:
-        return custom_response(err, 400)
+        # check if user already exist in the db
+        user_in_db = UserModel.get_user_by_email(data.get('email'))
+        if user_in_db:
+            message = {'error': 'User already exist, please supply another email address'}
+            return custom_response(message, 400)
 
-    # check if user already exist in the db
-    user_in_db = UserModel.get_user_by_email(data.get('email'))
-    if user_in_db:
-        message = {'error': 'User already exist, please supply another email address'}
-        return custom_response(message, 400)
+        user = UserModel(data)
+        user.save()
+    except Exception as err:
+        app.logger.info(err)
+        return custom_response_error(str(err), 400)
 
-    user = UserModel(data)
-    user.save()
-
-    role = 'normal'
-    if req_data.get('role'):
-        role = req_data.get('role')
     try:
+        role = 'normal'
+        if req_data.get('role'):
+            role = req_data.get('role')
         profile_data = profile_schema.load({
             "email": user.email,
             "user_id": user.id,
             "role": role
         })
-    except ValidationError as err:
-        return custom_response(err, 400)
+        profile = ProfileModel(profile_data)
+        profile.save()
 
-    profile = ProfileModel(profile_data)
-    profile.save()
+        ser_user = user_schema.dump(user)
+        ser_profile = profile_schema.dump(profile)
+        token = Auth.generate_token(ser_user.get('id'))
+        data = {
+            'token': token,
+            'user': ser_user,
+            'profile': ser_profile,
+            'status': 'success'
+        }
+        return custom_response(data, 201)
+    except Exception as err:
+        app.logger.info(err)
+        return custom_response_error(str(err), 400)
 
-    ser_user = user_schema.dump(user)
-    ser_profile = profile_schema.dump(profile)
-    token = Auth.generate_token(ser_user.get('id'))
-    data = {
-        'token': token,
-        'user': ser_user,
-        'profile': ser_profile,
-        'status': 'success'
-    }
-    return custom_response(data, 201)
+
 
 @user_api.route('/', methods=['GET'])
 @Auth.auth_required
@@ -75,33 +78,36 @@ def loginAdmin():
             "email": req_data.get("email"),
             "password": req_data.get("password")
             }, partial=True)
-    except ValidationError as err:
-        return custom_response(err, 400)
-    if not data.get('email') or not data.get('password'):
-        return custom_response({'error': 'you need email and password to sign in'}, 400)
 
-    user = UserModel.get_user_by_email(data.get('email'))
-    if not user:
-        return custom_response({'error': 'no user found'}, 400)
-    if not user.check_hash(data.get('password')):
-        return custom_response({'error': 'invalid credentials'}, 400)
+        if not data.get('email') or not data.get('password'):
+            return custom_response_error('you need email and password to sign in', 400)
 
-    profile = ProfileModel.get_profile_by_email(data.get('email'))
-    if not profile:
-        return custom_response({'error': 'no profile found'}, 400)
-    if profile.role != 'admin':
-        return custom_response({'error': 'invalid role'}, 400)
+        user = UserModel.get_user_by_email(data.get('email'))
+        if not user:
+            return custom_response_error('no user found', 400)
+        if not user.check_hash(data.get('password')):
+            return custom_response_error('invalid credentials', 400)
 
-    ser_user = user_schema.dump(user)
-    ser_profile = profile_schema.dump(profile)
-    token = Auth.generate_token(ser_user.get('id'))
-    data = {
-        'token': token,
-        'user': ser_user,
-        'profile': ser_profile,
-        'status': 'success'
-    }
-    return custom_response(data, 200)
+        profile = ProfileModel.get_profile_by_email(data.get('email'))
+        if not profile:
+            return custom_response_error('no profile found', 400)
+        if profile.role != 'admin':
+            return custom_response_error('invalid role', 400)
+
+        ser_user = user_schema.dump(user)
+        ser_profile = profile_schema.dump(profile)
+        token = Auth.generate_token(ser_user.get('id'))
+        data = {
+            'token': token,
+            'user': ser_user,
+            'profile': ser_profile,
+            'status': 'success'
+        }
+        return custom_response(data, 200)
+
+    except Exception as err:
+        app.logger.info(err)
+        return custom_response_error(str(err), 400)
 
 @user_api.route('/login', methods=['POST'])
 def login():
@@ -218,12 +224,12 @@ def get_me():
     return custom_response(ser_user, 200)
 
 
-def custom_response(res, status_code):
-    """
-    Custom Response Function
-    """
-    return Response(
-        mimetype="application/json",
-        response=json.dumps(res),
-        status=status_code
-    )
+# def custom_response(res, status_code):
+#     """
+#     Custom Response Function
+#     """
+#     return Response(
+#         mimetype="application/json",
+#         response=json.dumps(res),
+#         status=status_code
+#     )
